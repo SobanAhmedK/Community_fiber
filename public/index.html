@@ -1,206 +1,130 @@
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        form {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            color: #555;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        #chat {
-            display: none;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-
-        #roomName {
-            color: #007bff;
-        }
-
-        #messages {
-            height: 200px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #fafafa;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #e9e9e9;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .message .username {
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 5px;
-        }
-
-        .message .text {
-            color: #333;
-        }
-
-        #messageInput {
-            width: calc(100% - 80px);
-            padding: 10px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        #sendBtn {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #sendBtn:hover {
-            background-color: #218838;
-        }
-
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            form, #chat {
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            #messageInput {
-                width: calc(100% - 70px);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div>
-        <h1>Chat Server</h1>
-        <form id="joinForm">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <label for="room">Room Name:</label>
-            <input type="text" id="room" name="room" required>
-            <button type="submit">Join</button>
-        </form>
-
-        <div id="chat">
-            <h2>Chat Room: <span id="roomName"></span></h2>
-            <div id="messages"></div>
-            <input type="text" id="messageInput" placeholder="Type a message">
-            <button id="sendBtn">Send</button>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chat App</title>
+    
+    </head>
+    <body>
+        <div>
+            <h1>Chat Server</h1>
+            <form id="joinForm">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="room">Room Name:</label>
+                <input type="text" id="room" name="room" required>
+                <button type="submit">Join</button>
+            </form>
+    
+            <div id="chat">
+                <h2>Chat Room: <span id="roomName"></span></h2>
+                <div id="messages"></div>
+                <input type="text" id="messageInput" placeholder="Type a message">
+                <button id="sendBtn">Send</button>
+                <input type="file" id="fileInput" accept="image/*,video/*">
+            </div>
         </div>
-    </div>
-
-    <script>
-        const form = document.getElementById('joinForm');
-        const chatDiv = document.getElementById('chat');
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
-        const roomNameSpan = document.getElementById('roomName');
-
-        let ws;
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const room = document.getElementById('room').value;
-
-            ws = new WebSocket(`wss://${window.location.host}/ws/${room}`);
-
-            ws.onopen = function() {
-                ws.send(JSON.stringify({ username: username, message: `${username} joined the room.` }));
-                form.style.display = 'none';
-                chatDiv.style.display = 'block';
-                roomNameSpan.textContent = room;
-            };
-
-            ws.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                const msg = document.createElement('div');
-                msg.className = 'message';
-                msg.innerHTML = `<span class="username">${data.username}</span><span class="text">${data.message}</span>`;
-                messagesDiv.appendChild(msg);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
-            };
-
-            document.getElementById('sendBtn').addEventListener('click', function() {
-                const message = messageInput.value;
-                if (message && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ username: username, message: message }));
-                    messageInput.value = '';
-                }
+    
+        <script>
+            const form = document.getElementById('joinForm');
+            const chatDiv = document.getElementById('chat');
+            const messagesDiv = document.getElementById('messages');
+            const messageInput = document.getElementById('messageInput');
+            const roomNameSpan = document.getElementById('roomName');
+            const fileInput = document.getElementById('fileInput');
+    
+            let ws;
+            let username;
+            let selectedFile = null;
+    
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                username = document.getElementById('username').value;
+                const room = document.getElementById('room').value;
+    
+                ws = new WebSocket(`wss://${window.location.host}/ws/${room}`);
+    
+                ws.onopen = function() {
+                    ws.send(JSON.stringify({ username: username, message: `${username} joined the room.` }));
+                    form.style.display = 'none';
+                    chatDiv.style.display = 'block';
+                    roomNameSpan.textContent = room;
+                };
+    
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    const msg = document.createElement('div');
+                    msg.className = 'message';
+    
+                    if (data.image) {
+                        const img = document.createElement('img');
+                        img.src = `data:image/png;base64,${data.image}`;
+                        msg.appendChild(img);
+                    } else if (data.video) {
+                        const video = document.createElement('video');
+                        video.src = `data:video/mp4;base64,${data.video}`;
+                        video.controls = true;
+                        msg.appendChild(video);
+                    } else {
+                        msg.innerHTML = `<span class="username">${data.username}</span><span class="text">${data.message}</span>`;
+                    }
+    
+                    messagesDiv.appendChild(msg);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                };
             });
-        });
-    </script>
-</body>
-</html>
+            document.getElementById('sendBtn').addEventListener('click', function() {
+    sendMessage();
+});
+
+document.getElementById('messageInput').addEventListener('keydown', function(event) {
+    // Check if Enter key is pressed
+    if (event.key === 'Enter') {
+        // Check if Shift is held down
+        if (event.shiftKey) {
+            // Insert a newline
+            event.preventDefault(); // Prevent the default action (new line in textarea)
+            const cursorPos = messageInput.selectionStart;
+            const value = messageInput.value;
+            messageInput.value = value.substring(0, cursorPos) + '\n' + value.substring(cursorPos);
+            // Move the cursor to the position after the newline
+            messageInput.selectionStart = messageInput.selectionEnd = cursorPos + 1;
+        } else {
+            // Send the message
+            event.preventDefault(); // Prevent the default action (e.g., form submission)
+            sendMessage();
+        }
+    }
+});
+
+function sendMessage() {
+    const message = messageInput.value;
+
+    if (selectedFile) {
+        const reader = new FileReader();
+        reader.onloadend = function() {
+            const base64String = reader.result.split(",")[1]; // Get the base64 part
+            if (selectedFile.type.startsWith("image/")) {
+                ws.send(JSON.stringify({ username: username, image: base64String }));
+            } else if (selectedFile.type.startsWith("video/")) {
+                ws.send(JSON.stringify({ username: username, video: base64String }));
+            }
+            selectedFile = null; 
+            fileInput.value = ''; 
+        };
+        reader.readAsDataURL(selectedFile);
+    } else if (message && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ username: username, message: message }));
+        messageInput.value = '';
+    }
+}
+            fileInput.addEventListener('change', function(event) {
+                selectedFile = event.target.files[0];
+            });
+        </script>
+    </body>
+    </html>
+    
